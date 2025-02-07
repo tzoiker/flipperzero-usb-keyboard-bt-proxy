@@ -3,7 +3,9 @@ from __future__ import annotations
 import logging
 import os
 from collections.abc import Callable
+from enum import IntEnum
 from multiprocessing import Queue
+from multiprocessing.sharedctypes import Synchronized
 from types import MappingProxyType
 
 import sdl2
@@ -78,6 +80,13 @@ SCANCODES = MappingProxyType(
     }
 )
 
+
+class BtStatus(IntEnum):
+    DISCONNECTED = 0
+    CONNECTED = 1
+    ERROR = 2
+
+
 KeyboardEvent = tuple[bool, int, int]
 
 
@@ -86,12 +95,15 @@ class KeyboardCapturer:
     _window: sdl2.ext.Window
     _renderer: sdl2.ext.Renderer
     _queue: Queue[KeyboardEvent]
+    _bt_status: Synchronized[int]
     _sender_checker: Callable[[], bool]
     _sdl_delay: int
+    _WINDOW_TITLE = "USB Keyboard BT Proxy"
 
     def __init__(
         self,
         queue: Queue[KeyboardEvent],
+        bt_status: Synchronized[int],
         sender_checker: Callable[[], bool],
         sdl_delay: int,
     ):
@@ -112,7 +124,16 @@ class KeyboardCapturer:
 
         self._sender_checker = sender_checker
         self._queue = queue
+        self._bt_status = bt_status
         self._sdl_delay = sdl_delay
+
+    def _update_title(self) -> None:
+        status = {
+            BtStatus.DISCONNECTED: "disconnected",
+            BtStatus.CONNECTED: "connected",
+            BtStatus.ERROR: "error",
+        }[BtStatus(self._bt_status.value)]
+        self._window.title = f"{self._WINDOW_TITLE}: {status}"
 
     def _sdl_modifier_to_hid(self, modifiers: int) -> int:
         hid_modifiers = 0
@@ -188,6 +209,7 @@ class KeyboardCapturer:
                     self._enqueue_keyboard_event(pressed=pressed, event=event)
                     self._render_keyboard_event(event=event)
 
+            self._update_title()
             self._window.refresh()
             timer.SDL_Delay(self._sdl_delay)
 

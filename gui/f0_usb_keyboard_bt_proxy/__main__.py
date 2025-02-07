@@ -1,7 +1,9 @@
 import enum
 import logging
 import sys
-from multiprocessing import Process, Queue
+from ctypes import c_int
+from multiprocessing import Process, Queue, Value
+from multiprocessing.sharedctypes import Synchronized
 
 import argclass
 
@@ -30,11 +32,13 @@ def main() -> None:
 
     logging.basicConfig(level=parser.log_level)
     queue: Queue[KeyboardEvent] = Queue()
+    bt_status: Synchronized[int] = Value(c_int)
     sender_process = Process(
         target=run_bt_sender,
         args=(sys.argv,),
         kwargs=dict(
             queue=queue,
+            bt_status=bt_status,
             device_name=parser.bt_device_name,
             interval=parser.sender_interval,
             log_level=int(parser.log_level),
@@ -43,6 +47,7 @@ def main() -> None:
     sender_process.start()
     capturer = KeyboardCapturer(
         queue=queue,
+        bt_status=bt_status,
         sender_checker=lambda: sender_process.is_alive(),
         sdl_delay=parser.sdl_delay,
     )

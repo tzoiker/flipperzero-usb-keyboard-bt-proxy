@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from multiprocessing import Queue
+from multiprocessing.sharedctypes import Synchronized
 from queue import Empty
 from struct import pack
 from typing import Any
@@ -18,7 +19,7 @@ from PySide6.QtBluetooth import (
 from PySide6.QtCore import QCoreApplication, QObject, QTimer, Signal
 from PySide6.QtWidgets import QApplication
 
-from .keyboard import KeyboardEvent
+from .keyboard import BtStatus, KeyboardEvent
 
 log = logging.getLogger(__name__)
 
@@ -73,6 +74,11 @@ class DeviceFinder(QObject):
 class DeviceConnector(QObject):
     controller: QLowEnergyController
     service: QLowEnergyService
+    _bt_status: Synchronized[int]
+
+    def __init__(self, *args: Any, bt_status: Synchronized[int], **kwargs: Any):
+        super().__init__(*args, **kwargs)
+        self._bt_status = bt_status
 
     @property
     def ble_controller_ready(self) -> bool:
@@ -93,16 +99,19 @@ class DeviceConnector(QObject):
 
     def error_occurred(self, *args: Any, **kwargs: Any) -> None:
         log.error("BT connection error.")
+        self._bt_status.value = BtStatus.ERROR.value
 
     def connected(self, *args: Any, **kwargs: Any) -> None:
         log.info("BT connected.")
         self.check_ble_controller()
         self.controller.discoverServices()
+        self._bt_status.value = BtStatus.CONNECTED.value
 
     def disconnected(self, *args: Any, **kwargs: Any) -> None:
         log.info("BT disconnected.")
         self.check_ble_controller()
         self.controller.connectToDevice()
+        self._bt_status.value = BtStatus.DISCONNECTED.value
 
     def service_discovered(self, service_uuid: QBluetoothUuid) -> None:
         log.info("GATT service discovered.")
@@ -194,6 +203,7 @@ class KeyboardEventSender(QObject):
 def run_bt_sender(
     argv: list[str],
     queue: Queue[KeyboardEvent],
+    bt_status: Synchronized[int],
     device_name: str,
     interval: int,
     log_level: int,
@@ -203,7 +213,7 @@ def run_bt_sender(
     app = QApplication(argv)
 
     device_finder = DeviceFinder(app, device_name=device_name)
-    device_connector = DeviceConnector(app)
+    device_connector = DeviceConnector(app, bt_status=bt_status)
     device_finder.device_found_signal.connect(device_connector.device_found)
     KeyboardEventSender(
         app,
