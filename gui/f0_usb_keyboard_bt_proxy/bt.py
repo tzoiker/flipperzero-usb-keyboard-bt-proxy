@@ -173,7 +173,7 @@ class KeyboardEventSender(QObject):
         self,
         characteristic: QLowEnergyCharacteristic,
         data: bytes,
-    ):
+    ) -> None:
         self._device_connector.service.writeCharacteristic(
             characteristic,
             data,
