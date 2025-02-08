@@ -16,10 +16,10 @@ jobs:
         working-directory: ./gui
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python3.12
+      - name: Setup python3.13
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: '3.13'
       - run: python -m pip install poetry~=1.8.0
       - run: poetry install
       - run: poetry run ruff check f0_usb_keyboard_bt_proxy
