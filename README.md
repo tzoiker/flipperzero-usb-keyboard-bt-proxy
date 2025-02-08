@@ -20,6 +20,8 @@ But in reality, I had a mini-PC to configure, a laptop and no external keyboard.
 
 Laptop –> Bluetooth (BLE) –> FlipperZero –> USB (HID) –> Device.
 
+Stability is questionable.
+
 ### <a name="about_gui"/> GUI
 Requires **python >= 3.10**.
 
