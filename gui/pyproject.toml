@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "f0-usb-keyboard-bt-proxy"
-version = "0.0.1a1"
+version = "0.0.1a2"
 description = "Utility to proxy keyboard events via BT -> FlipperZero -> USB"
 authors = ["Tzoiker <tzoiker@gmail.com>"]
 repository = "https://github.com/tzoiker/flipperzero-usb-keyboard-bt-proxy"
