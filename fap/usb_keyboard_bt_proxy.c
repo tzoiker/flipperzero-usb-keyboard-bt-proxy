@@ -5,7 +5,7 @@ static UsbKeyboardBtProxy* g_app;
 static char* g_device_name;
 
 static BleEventAckStatus ble_svc_event_handler(void* event, void* context) {
-    BleEventAckStatus ret = BleEventNotAck; 
+    BleEventAckStatus ret = BleEventNotAck;
     BleService* svc = (BleService*)context;
     hci_event_pckt* event_pckt = (hci_event_pckt*)(((hci_uart_pckt*)event)->data);
     evt_blecore_aci* blecore_evt = (evt_blecore_aci*)event_pckt->data;
@@ -14,29 +14,25 @@ static BleEventAckStatus ble_svc_event_handler(void* event, void* context) {
     if(event_pckt->evt == HCI_VENDOR_SPECIFIC_DEBUG_EVT_CODE) {
         if(blecore_evt->ecode == ACI_GATT_ATTRIBUTE_MODIFIED_VSEVT_CODE) {
             attribute_modified = (aci_gatt_attribute_modified_event_rp0*)blecore_evt->data;
-            if (attribute_modified->Attr_Handle == (svc->char_instance.handle + 1)) {
+            if(attribute_modified->Attr_Handle == (svc->char_instance.handle + 1)) {
                 const bool pressed = attribute_modified->Attr_Data[0] == EVENT_PRESSED;
-                const uint16_t scancode = (uint16_t) attribute_modified->Attr_Data[1];
-                const uint16_t modifier = ((uint16_t) attribute_modified->Attr_Data[2]) << 8;
+                const uint16_t scancode = (uint16_t)attribute_modified->Attr_Data[1];
+                const uint16_t modifier = ((uint16_t)attribute_modified->Attr_Data[2]) << 8;
                 // Handling ping. Not sure if it is really needed though.
-                if (!pressed && !scancode && !modifier) {
+                if(!pressed && !scancode && !modifier) {
                     return ret;
                 }
                 ret = BleEventAckFlowEnable;
-                snprintf(
-                    show_text, sizeof(show_text), 
-                    "0x%04x", scancode | modifier
-                );
+                snprintf(show_text, sizeof(show_text), "0x%04x", scancode | modifier);
                 with_view_model(
                     g_app->start_page->text_view,
                     TextModel * model,
-                    { 
+                    {
                         model->title = pressed ? "Pressed" : "Released";
                         model->text = show_text;
                     },
-                    true
-                );
-                if (pressed) {
+                    true);
+                if(pressed) {
                     furi_hal_hid_kb_press(scancode | modifier);
                 } else {
                     furi_hal_hid_kb_release(scancode | modifier);
@@ -80,7 +76,6 @@ static void ble_svc_stop(BleService* svc) {
     free(svc);
 }
 
-
 static FuriHalBleProfileBase* ble_profile_start(FuriHalBleProfileParams profile_params) {
     UNUSED(profile_params);
 
@@ -103,9 +98,9 @@ static void ble_profile_stop(FuriHalBleProfileBase* profile) {
     ble_svc_stop(ble_profile->svc);
 }
 
-
 static void ble_profile_get_config(GapConfig* config, FuriHalBleProfileParams profile_params) {
-    UsbKeyboardBtProxyProfileParams* ble_app_profile_params = (UsbKeyboardBtProxyProfileParams*)profile_params;
+    UsbKeyboardBtProxyProfileParams* ble_app_profile_params =
+        (UsbKeyboardBtProxyProfileParams*)profile_params;
 
     furi_check(config);
 
@@ -131,7 +126,7 @@ static void ble_profile_get_config(GapConfig* config, FuriHalBleProfileParams pr
     memcpy(config->adv_name, furi_string_get_cstr(name), furi_string_size(name));
     furi_string_free(name);
 
-    g_device_name = (char*) malloc(sizeof(config->adv_name));
+    g_device_name = (char*)malloc(sizeof(config->adv_name));
     memcpy(g_device_name, config->adv_name, sizeof(config->adv_name));
 
     FURI_LOG_I(TAG, "Got profile config");
@@ -142,18 +137,15 @@ static void bt_connection_status_changed_callback(BtStatus status, void* context
 
     const bool connected = (status == BtStatusConnected);
     notification_internal_message(
-        g_app->notifications,
-        connected ? &sequence_set_blue_255 : &sequence_reset_blue
-    );
+        g_app->notifications, connected ? &sequence_set_blue_255 : &sequence_reset_blue);
     with_view_model(
         g_app->start_page->text_view,
         TextModel * model,
-        { 
+        {
             model->title = connected ? "Connected" : "Disconnected";
             model->text = NULL;
         },
-        true
-    );
+        true);
 }
 
 bool start_custom_ble_gatt_svc(UsbKeyboardBtProxy* app) {
@@ -175,9 +167,8 @@ bool start_custom_ble_gatt_svc(UsbKeyboardBtProxy* app) {
 
         // Starting a custom ble profile for service creation
         FURI_LOG_I(TAG, "BT profile starting...");
-        app->ble->base = bt_profile_start(
-            app->ble->bt, &profile_callbacks, (void*)&ble_profile_params
-        );
+        app->ble->base =
+            bt_profile_start(app->ble->bt, &profile_callbacks, (void*)&ble_profile_params);
         FURI_LOG_I(TAG, "BT profile started");
 
         if(!app->ble->base) {
@@ -189,7 +180,8 @@ bool start_custom_ble_gatt_svc(UsbKeyboardBtProxy* app) {
 
         FURI_LOG_I(TAG, "BT profile start advertising...");
         furi_hal_bt_start_advertising();
-        bt_set_status_changed_callback(g_app->ble->bt, bt_connection_status_changed_callback, g_app);
+        bt_set_status_changed_callback(
+            g_app->ble->bt, bt_connection_status_changed_callback, g_app);
     } else {
         return false;
     }
@@ -208,13 +200,13 @@ static void text_view_draw_callback(Canvas* canvas, void* context) {
     }
 
     canvas_clear(canvas);
-    if (g_device_name) {
+    if(g_device_name) {
         canvas_draw_str_aligned(canvas, 64, 10, AlignCenter, AlignBottom, g_device_name);
     }
-    if (title) {
+    if(title) {
         canvas_draw_str_aligned(canvas, 64, text ? 27 : 32, AlignCenter, AlignBottom, title);
     }
-    if (text) {
+    if(text) {
         canvas_draw_str_aligned(canvas, 64, 47, AlignCenter, AlignBottom, text);
     }
 }
@@ -229,8 +221,7 @@ static void submenu_callback(void* context, uint32_t index) {
             app->start_page->text_view,
             TextModel * model,
             { model->title = "Service started..."; },
-            true
-        );
+            true);
 
     } else {
         with_view_model(
@@ -240,8 +231,7 @@ static void submenu_callback(void* context, uint32_t index) {
                 model->title = "Service failed to start!";
                 model->text = "Make sure Bluetooth is ON.";
             },
-            true
-        );
+            true);
     }
 
     view_dispatcher_switch_to_view(app->view_dispatcher, ViewIdStartPage);
@@ -262,7 +252,7 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
     // furi_check(furi_hal_usb_set_config(&usb_hid, NULL) == true);
     // furi_hal_hid_kb_release_all();
 
-    g_app = (UsbKeyboardBtProxy*) malloc(sizeof(UsbKeyboardBtProxy));
+    g_app = (UsbKeyboardBtProxy*)malloc(sizeof(UsbKeyboardBtProxy));
     g_app->notifications = furi_record_open(RECORD_NOTIFICATION);
     g_app->gui = furi_record_open(RECORD_GUI);
     g_app->view_dispatcher = view_dispatcher_alloc();
@@ -276,7 +266,8 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
     submenu_add_item(g_app->submenu, "Start", 0, submenu_callback, g_app);
 
     // Add submenu to ViewDispatcher
-    view_dispatcher_add_view(g_app->view_dispatcher, ViewIdMainMenu, submenu_get_view(g_app->submenu));
+    view_dispatcher_add_view(
+        g_app->view_dispatcher, ViewIdMainMenu, submenu_get_view(g_app->submenu));
 
     // Initializing
     g_app->start_page = malloc(sizeof(StartPage));
@@ -286,12 +277,10 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
 
     // Attach views to ViewDispatcher
     view_dispatcher_add_view(
-        g_app->view_dispatcher, ViewIdStartPage, g_app->start_page->text_view
-    );
+        g_app->view_dispatcher, ViewIdStartPage, g_app->start_page->text_view);
     view_dispatcher_set_event_callback_context(g_app->view_dispatcher, g_app);
     view_dispatcher_set_navigation_event_callback(
-        g_app->view_dispatcher, view_dispatcher_navigation_callback_event
-    );
+        g_app->view_dispatcher, view_dispatcher_navigation_callback_event);
     // Set up text view
     view_set_context(g_app->start_page->text_view, g_app);
     view_allocate_model(g_app->start_page->text_view, ViewModelTypeLockFree, sizeof(TextModel));
@@ -302,7 +291,8 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
     // Add debug logging before running the dispatcher
     FURI_LOG_I(TAG, "Running view dispatcher");
 
-    view_dispatcher_attach_to_gui(g_app->view_dispatcher, g_app->gui, ViewDispatcherTypeFullscreen);
+    view_dispatcher_attach_to_gui(
+        g_app->view_dispatcher, g_app->gui, ViewDispatcherTypeFullscreen);
 
     // Run the ViewDispatcher => application loop (on exit the loop ends, and
     // the below cleanup code is executed)
@@ -315,7 +305,7 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
         FURI_LOG_I(TAG, "Disconnecting from BT");
         bt_set_status_changed_callback(g_app->ble->bt, NULL, NULL);
         bt_disconnect(g_app->ble->bt);
- 
+
         // Wait 2nd core to update nvm storage
         furi_delay_ms(200);
 
