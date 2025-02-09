@@ -1,0 +1,10 @@
+App(
+    appid="usb_keyboard_bt_proxy",
+    name="USB Keyboard BT Proxy",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="usb_keyboard_bt_proxy_app",
+    requires=["bt"],
+    stack_size=1 * 1024,
+    fap_icon="usb_keyboard_bt_proxy.png",
+    fap_category="Bluetooth",
+)
