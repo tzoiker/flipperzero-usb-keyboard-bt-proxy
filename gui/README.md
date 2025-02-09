@@ -20,7 +20,7 @@ But in reality, I had a mini-PC to configure, a laptop and no external keyboard.
 
 Laptop –> Bluetooth (BLE) –> FlipperZero –> USB (HID) –> Device.
 
-Stability is questionable.
+Stability/usability is questionable at this moment.
 
 ### <a name="about_gui"/> GUI
 Requires **python >= 3.10**.
@@ -50,14 +50,24 @@ pip install f0-usb-keyboard-bt-proxy
 
 Build from source:
 ```bash
+git clone https://github.com/tzoiker/flipperzero-usb-keyboard-bt-proxy.git
+cd flipperzero-usb-keyboard-bt-proxy/fap
 pip install ufbt
-cd fap
+```
+
+Optionally, select desirable firmware version, e.g.,
+```
+ufbt update -b 1.0.1
+```
+and, then, after connecting F0,
+```
 ufbt launch
 ```
 
-or
-- Download .fap file from the releases;
-- Place it to the SD-card under apps/Bluetooth.
+Otherwise,
+- download .fap file from the [releases](https://github.com/tzoiker/flipperzero-usb-keyboard-bt-proxy/releases)
+  (may not be compatible with your version of firmware);
+- place it to the SD-card under apps/Bluetooth.
 
 
 ## <a name="Usage"/> Usage
