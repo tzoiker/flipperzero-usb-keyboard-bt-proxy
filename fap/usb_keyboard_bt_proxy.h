@@ -23,7 +23,7 @@
 #define ACI_GATT_ATTRIBUTE_MODIFIED_VSEVT_CODE 0x0C01U
 #define CHARACTERISTIC_NAME                    "Keyboard Event"
 #define EVENT_PRESSED                          1
-#define MAC_XOR                                0x06af
+#define MAC_XOR                                0x00a0d8f5
 
 typedef enum {
     ViewIdMainMenu,
@@ -68,7 +68,7 @@ typedef struct {
 
 typedef struct {
     const char* device_name_prefix;
-    uint16_t mac_xor;
+    uint32_t mac_xor;
 } UsbKeyboardBtProxyProfileParams;
 
 typedef PACKED(struct) _hci_uart_pckt {
@@ -98,22 +98,22 @@ evt_blecore_aci;
 
 static const Service_UUID_t service_uuid = {
     .Service_UUID_128 = {
-        0x77,
-        0xb6,
-        0x7f,
-        0xce,
+        0x91,
+        0x70,
+        0x20,
+        0x08,
+        0x7d,
+        0xe0,
+        0x45,
+        0x79,
+        0xaf,
+        0xad,
+        0xd1,
+        0x8c,
+        0x55,
         0x96,
-        0x02,
-        0x4f,
-        0xe6,
-        0xad,
-        0x12,
-        0xd4,
-        0x62,
-        0xad,
-        0xf8,
-        0x67,
-        0x6f,
+        0x40,
+        0x95,
     }};
 
 // Holds pressed/released (uint8) + scancode (uint8) + modifiers (uint8)
@@ -124,22 +124,22 @@ BleGattCharacteristicParams char_descriptor = {
     .uuid =
         {.Char_UUID_128 =
              {
-                 0x91,
-                 0x56,
-                 0x6c,
-                 0x96,
-                 0xb9,
-                 0x7e,
-                 0x48,
-                 0x86,
-                 0x9c,
-                 0x80,
-                 0x93,
-                 0xee,
-                 0xc5,
-                 0x16,
-                 0x06,
-                 0xca,
+                0xb4,
+                0xb2,
+                0xc7,
+                0x03,
+                0x25,
+                0x1e,
+                0x45,
+                0xc7,
+                0xab,
+                0xdd,
+                0xb9,
+                0xd9,
+                0x3b,
+                0x2a,
+                0xe8,
+                0xc1,
              }},
     .data_prop_type = FlipperGattCharacteristicDataFixed,
     .uuid_type = UUID_TYPE_128,

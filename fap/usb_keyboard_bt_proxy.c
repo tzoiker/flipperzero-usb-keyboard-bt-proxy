@@ -108,12 +108,10 @@ static void ble_profile_get_config(GapConfig* config, FuriHalBleProfileParams pr
     // Set mac address
     memcpy(config->mac_address, furi_hal_version_get_ble_mac(), sizeof(config->mac_address));
 
-    // Change MAC address for HID profile
-    config->mac_address[2]++;
-    if(ble_app_profile_params) {
-        config->mac_address[0] ^= ble_app_profile_params->mac_xor;
-        config->mac_address[1] ^= ble_app_profile_params->mac_xor >> 8;
-    }
+    // Change MAC address
+    config->mac_address[0] ^= ble_app_profile_params->mac_xor;
+    config->mac_address[1] ^= ble_app_profile_params->mac_xor >> 8;
+    config->mac_address[2] ^= ble_app_profile_params->mac_xor >> 16;
 
     // Set advertise name
     memset(config->adv_name, 0, sizeof(config->adv_name));
@@ -161,8 +159,6 @@ bool start_custom_ble_gatt_svc(UsbKeyboardBtProxy* app) {
         FURI_LOG_I(TAG, "BT disconnecting...");
         bt_disconnect(app->ble->bt);
 
-        // Wait 2nd core to update nvm storage;
-        // i have seen that in the original code, the delay is 200ms
         furi_delay_ms(200);
 
         // Starting a custom ble profile for service creation
@@ -247,10 +243,10 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
     UNUSED(p);
     FURI_LOG_I(TAG, "Start");
 
-    // FuriHalUsbInterface* usb_mode_prev = furi_hal_usb_get_config();
-    // furi_hal_usb_unlock();
-    // furi_check(furi_hal_usb_set_config(&usb_hid, NULL) == true);
-    // furi_hal_hid_kb_release_all();
+    FuriHalUsbInterface* usb_mode_prev = furi_hal_usb_get_config();
+    furi_hal_usb_unlock();
+    furi_check(furi_hal_usb_set_config(&usb_hid, NULL) == true);
+    furi_hal_hid_kb_release_all();
 
     g_app = (UsbKeyboardBtProxy*)malloc(sizeof(UsbKeyboardBtProxy));
     g_app->notifications = furi_record_open(RECORD_NOTIFICATION);
@@ -288,7 +284,6 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
 
     view_dispatcher_switch_to_view(g_app->view_dispatcher, ViewIdMainMenu);
 
-    // Add debug logging before running the dispatcher
     FURI_LOG_I(TAG, "Running view dispatcher");
 
     view_dispatcher_attach_to_gui(
@@ -343,7 +338,7 @@ int32_t usb_keyboard_bt_proxy_app(void* p) {
 
     submenu_free(g_app->submenu);
 
-    // furi_hal_usb_set_config(usb_mode_prev, NULL);
+    furi_hal_usb_set_config(usb_mode_prev, NULL);
 
     free(g_app);
 
