@@ -1,16 +1,15 @@
 name: publish
 
-# on:
-#   push:
-#     tags:
-#       - v*
-
 on:
-  push: []
+  workflow_run:
+    workflows: ["lint"]
+    types:
+      - completed
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success' && startsWith(github.ref, 'refs/tags/v')
     permissions:
       id-token: write
       contents: read
